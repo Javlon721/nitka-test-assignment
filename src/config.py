@@ -8,7 +8,7 @@ class _Config:
     OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY')
     
     BASEDIR: Path = Path.cwd()
-    database_path: str = 'tmp/db/library.db'
+    database_path: str = 'tmp/db'
     pdfs_folder: str = 'tmp/pdfs'
     
     ARXIV_BASE_URL: str = 'http://export.arxiv.org/api/query'
