@@ -1,18 +1,14 @@
 import asyncio
-import json
 import os
-from src.scripts.connection import Publication
+from src.scripts.connection import Publication, PublicationInfo
 from src.scripts.downloading import LoadedPDFData
 from src.config import Config
-import time
 from google import genai
-
-
 
 
 class MetadataExtractor:
 
-    def __init__(self, loaded_ch: asyncio.Queue[LoadedPDFData], extracted_ch: asyncio.Queue):
+    def __init__(self, loaded_ch: asyncio.Queue[LoadedPDFData], extracted_ch: asyncio.Queue[PublicationInfo]):
         self.client = genai.Client(api_key=Config.GEMINI_API_KEY)
         self.loaded_ch = loaded_ch
         self.extracted_ch = extracted_ch
@@ -47,7 +43,7 @@ class MetadataExtractor:
             """
             
             response = await self.client.aio.models.generate_content(
-                model='gemini-2.0-flash',
+                model=Config.GEMINI_MODEL,
                 contents=[
                     promt,
                     my_file
@@ -58,11 +54,13 @@ class MetadataExtractor:
         },
             )
             
-            self.extracted_ch.put_nowait({
-                        **response.parsed.model_dump(),
-                        'pdf_link': paper_info.pdf_link,
-                        'local_pdf_path': paper_info.local_pdf_path,
-                    })
+            self.extracted_ch.put_nowait(
+                PublicationInfo(
+                    **response.parsed.model_dump(),
+                    pdf_link=paper_info.pdf_link,
+                    local_pdf_path=paper_info.local_pdf_path
+                    )
+                )
         except Exception as e:
             print(e)
             return None
@@ -75,10 +73,9 @@ class MetadataExtractor:
         print()
 
         if os.path.exists(paper.local_pdf_path):
-            metadata = await self.extract_metadata_with_ai(paper)
-            if metadata:
-                print(f"End processing paper {paper_title}")
-                print()
+            await self.extract_metadata_with_ai(paper)
+            print(f"End processing paper {paper_title}")
+            print()
 
 
     async def process_papers(self):

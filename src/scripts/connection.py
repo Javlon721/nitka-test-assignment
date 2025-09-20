@@ -16,7 +16,7 @@ class PublicationLocation(BaseModel):
     local_pdf_path: str = ""
 
 
-class Publication(PublicationLocation):
+class Publication(BaseModel):
     title: str = ""
     summary: str = ""
     tags: list[str] = Field(default_factory=list)
@@ -24,6 +24,9 @@ class Publication(PublicationLocation):
     organization: str = ""
     country: str = ""
     language: str = ""
+
+class PublicationInfo(PublicationLocation, Publication):
+    pass
 
 
 def arr_to_str(data: list[any], delimiter: str = ', ') -> str:
@@ -60,7 +63,7 @@ def custom_serialization(data: list[any]) -> list[str]:
 
 class Database:
 
-    def __init__(self, extracted_ch: asyncio.Queue):
+    def __init__(self, extracted_ch: asyncio.Queue[PublicationInfo]):
         self.db_file_path = Config.DATABASE_FILE_PATH
         self.db_link =  Config.DATABASE_LINK
         self.table_name = "publications"
@@ -100,7 +103,6 @@ class Database:
     def clear_db_folder(self):
         if self.is_db_exists():
             shutil.rmtree(self.db_file_path)
-            self.create_db_folder()
 
 
     def create_db_folder(self):
@@ -116,11 +118,9 @@ class Database:
 
     def insert_publication(
         self, 
-        data: Publication
+        data: PublicationInfo
 ):
         with self.get_connection() as conn:
-            print(f'Saving {data.title}')
-
             cursor = conn.cursor()
             to_save = data.model_dump()
 
@@ -132,16 +132,19 @@ class Database:
             cursor.execute(query, values)
             conn.commit()
 
+            print(f'Saved {data.title} to db')
+            print()
+
             return cursor.lastrowid
 
 
-    def insert_publications(self, data: list[Publication]):
-        result = []
+    async def consumer(self):
+        while True:
+            data = await self.extracted_ch.get()
+            if data == Config.END_VALUE_IN_CHANNELS:
+                return
 
-        for item in data:
-            result.append(self.insert_publication(item)) #todo: remake db connections
-        
-        return result
+            self.insert_publication(data)
 
 
     def get_publications(self, page=1, per_page=20):
