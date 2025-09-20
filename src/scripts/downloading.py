@@ -1,10 +1,17 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 import json
 import os
 import pathlib
 import arxiv
 from src.config import Config
 import shutil
+
+@dataclass
+class LoadedPDFData:
+    title: str
+    pdf_url: str
+    local_path: str
 
 class PDFDownloader:
     def __init__(self):
@@ -21,7 +28,7 @@ class PDFDownloader:
         os.makedirs(self.pdfs_folder, exist_ok=True)
 
 
-    def download_from_arxiv(self, max_results=100, max_workers=8):
+    def download_from_arxiv(self, max_results=100, max_workers=8) -> list[LoadedPDFData]:
         """Download papers from ArXiv"""
         print(f"Downloading {max_results} papers from ArXiv...")
         papers = self._papers_to_download(max_results)
@@ -36,7 +43,7 @@ class PDFDownloader:
         return self.downloaded_papers
 
 
-    def _download_paper(self, paper):
+    def _download_paper(self, paper) -> LoadedPDFData:
             try:
                 safe_title = "".join(c for c in paper.title if c.isalnum() or c in (' ', '-', '_')).rstrip()
                 safe_title = safe_title[:50]
@@ -46,11 +53,11 @@ class PDFDownloader:
                 print(f"Downloading: {paper.title[:60]}...")
                 paper.download_pdf(self.pdfs_folder)
 
-                return {
-                    'title': paper.title,
-                    'pdf_url': paper.pdf_url,
-                    'local_path': str(filepath),
-                }
+                return LoadedPDFData(
+                        title= paper.title,
+                        pdf_url= paper.pdf_url,
+                        local_path= str(filepath)
+                    )
             except Exception as e:
                 print(f"Error downloading {paper.title}: {e}")
                 return None
@@ -77,7 +84,8 @@ def main():
     downloader = PDFDownloader()
     downloader.clear_pdfs()
     arxiv_papers = downloader.download_from_arxiv(2)
-    print(json.dumps(arxiv_papers, indent=4))
+    for item in arxiv_papers:
+        print(item.title)
     print(f"\nTotal papers collected: {len(downloader.downloaded_papers)}")
 
 if __name__ == "__main__":
