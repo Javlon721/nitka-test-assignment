@@ -48,12 +48,8 @@ class PDFDownloader:
 
                 return {
                     'title': paper.title,
-                    'summary': paper.summary,
-                    'authors': [str(author) for author in paper.authors],
-                    'published': str(paper.published),
                     'pdf_url': paper.pdf_url,
                     'local_path': str(filepath),
-                    'categories': paper.categories
                 }
             except Exception as e:
                 print(f"Error downloading {paper.title}: {e}")
