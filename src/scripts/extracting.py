@@ -88,7 +88,7 @@ class MetadataExtractor:
 
 
     def process_papers(self, papers_data: list[LoadedPDFData]):
-        print(f"Processing {len(papers_data)} papers...")
+        print(f"Extracting {len(papers_data)} papers...")
 
         processed_papers = []
         

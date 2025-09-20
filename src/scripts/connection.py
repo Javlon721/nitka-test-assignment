@@ -15,13 +15,12 @@ class Publication(TypedDict):
     title: str
     summary: str
     tags: list[str]
-    year_published: datetime
+    year_published: str
     organization: str
     country: str
     language: str
     pdf_link: str
     local_pdf_path: str
-    authors: list[str]
 
 
 def arr_to_str(data: list[any], delimiter: str = ', ') -> str:
@@ -61,7 +60,6 @@ class Database:
     def __init__(self):
         self.db_file_path = Config.DATABASE_FILE_PATH
         self.db_link =  Config.DATABASE_LINK
-        self.init_db()
 
 
     @contextmanager
@@ -80,9 +78,8 @@ class Database:
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         title TEXT NOT NULL,
                         summary TEXT,
-                        authors TEXT NOT NULL,
                         tags TEXT,
-                        year_published TIMESTAMP NOT NULL,
+                        year_published TEXT,
                         organization TEXT,
                         country TEXT,
                         language TEXT DEFAULT 'English',
@@ -104,7 +101,7 @@ class Database:
 
     def create_db_folder(self):
         if self.is_db_exists():
-            raise FileExistsError("DB data already exists")
+            print("DB data already exists. Continue...")
         os.makedirs(self.db_file_path, exist_ok=True)
 
 
@@ -117,6 +114,7 @@ class Database:
         data: Publication
 ):
         with self.get_connection() as conn:
+            print(f'Saving {data["title"]}')
             cursor = conn.cursor()
 
             columns = arr_to_str(data.keys())
@@ -129,6 +127,14 @@ class Database:
 
             return cursor.lastrowid
 
+
+    def insert_publications(self, data: list[Publication]):
+        result = []
+
+        for item in data:
+            result.append(self.insert_publication(item)) #todo: remake db connections
+        
+        return result
 
     def get_publications(self, page=1, per_page=20):
         offset = (page - 1) * per_page
@@ -160,4 +166,4 @@ if __name__ == "__main__":
     #     authors=['Author1', 'Author2']
     #     )
     # test_db.insert_publication(test_data)
-    print(test_db.get_publications()[0])
+    print(test_db.get_publications())
