@@ -3,14 +3,13 @@ from dataclasses import dataclass, asdict
 import os
 import pathlib
 import arxiv
+from src.scripts.connection import PublicationLocation
 from src.config import Config
 import shutil
 
-@dataclass
-class LoadedPDFData:
-    title: str
-    pdf_url: str
-    local_path: str
+class LoadedPDFData(PublicationLocation):
+    title: str = ""
+
 
 class PDFDownloader:
     def __init__(self):
@@ -54,8 +53,8 @@ class PDFDownloader:
 
                 return LoadedPDFData(
                         title= paper.title,
-                        pdf_url= paper.pdf_url,
-                        local_path= str(filepath)
+                        pdf_link= paper.pdf_url,
+                        local_pdf_path= str(filepath)
                     )
             except Exception as e:
                 print(f"Error downloading {paper.title}: {e}")

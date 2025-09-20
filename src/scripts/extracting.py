@@ -1,21 +1,14 @@
 import json
 import os
 import PyPDF2
-from pydantic import BaseModel
+from src.scripts.connection import Publication
 from src.scripts.downloading import LoadedPDFData
 from src.config import Config
 import time
 from google import genai
 
 
-class PDFInfo(BaseModel):
-    title: str
-    summary: str
-    tags: list[str]
-    year_published:str
-    organization: str
-    country: str
-    language: str
+
 
 class MetadataExtractor:
 
@@ -23,26 +16,9 @@ class MetadataExtractor:
         self.client = genai.Client(api_key=Config.GEMINI_API_KEY)
 
 
-    def extract_text_from_pdf(self, pdf_path):
-        try:
-            with open(pdf_path, 'rb') as file:
-                pdf_reader = PyPDF2.PdfReader(file)
-                text = ""
-                
-                max_pages = min(3, len(pdf_reader.pages))
-                for page_num in range(max_pages):
-                    page = pdf_reader.pages[page_num]
-                    text += page.extract_text()
-                
-                return text[:4000]
-        except Exception as e:
-            print(f"Error extracting text from {pdf_path}: {e}")
-            return ""
-
-
     def extract_metadata_with_ai(self, paper_info: LoadedPDFData):
         try:
-            my_file = self.client.files.upload(file=paper_info.local_path)
+            my_file = self.client.files.upload(file=paper_info.local_pdf_path)
             promt = f"""
                 Extract and analyze the following academic paper information and return a JSON object with the specified fields.
                 
@@ -77,7 +53,7 @@ class MetadataExtractor:
                 ],
                 config={
                 'response_mime_type': 'application/json',
-                'response_schema': PDFInfo,
+                'response_schema': Publication,
         },
             )
             
@@ -95,15 +71,15 @@ class MetadataExtractor:
         for i, paper in enumerate(papers_data):
             print(f"Processing paper {i+1}/{len(papers_data)}: {paper.title[:50]}...")
 
-            if os.path.exists(paper.local_path):
+            if os.path.exists(paper.local_pdf_path):
                 metadata = self.extract_metadata_with_ai(paper)
                 if not metadata:
                     continue
 
                 processed_paper = {
                     **metadata,
-                    'pdf_link': paper.pdf_url,
-                    'local_pdf_path': paper.local_path,
+                    'pdf_link': paper.pdf_link,
+                    'local_pdf_path': paper.local_pdf_path,
                 }
                 
                 processed_papers.append(processed_paper)
