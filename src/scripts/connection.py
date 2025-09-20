@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import contextmanager
 import datetime
+import json
 import os
 import pathlib
 import shutil
@@ -169,12 +170,13 @@ class Database:
 
 
 if __name__ == "__main__":
-    test_db = Database()
-    test_data = Publication(
-        title="Most popular",
-        year_published='2202',
-        tags=['tag1', 'tag2', 'tag3'],
-        authors=['Author1', 'Author2'],
-        )
+    test_ch = asyncio.Queue()
+    test_db = Database(test_ch)
+    # test_data = Publication(
+    #     title="Most popular",
+    #     year_published='2202',
+    #     tags=['tag1', 'tag2', 'tag3'],
+    #     authors=['Author1', 'Author2'],
+    #     )
     # test_db.insert_publication(test_data)
-    print(test_db.get_publications())
+    print(len(test_db.get_publications()))

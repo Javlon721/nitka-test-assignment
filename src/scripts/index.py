@@ -14,7 +14,7 @@ def print_shifts(msg: str):
 async def main():
   loaded_ch = asyncio.Queue()
   extracted_ch = asyncio.Queue()
-  MAX_PAPERS = 2 #todo: remake to Config.MAX_RESULTS
+  MAX_PAPERS = 15 #todo: remake to Config.MAX_RESULTS
 
   downloader = PDFDownloader(loaded_ch)
   papers = downloader.download_from_arxiv(MAX_PAPERS)
