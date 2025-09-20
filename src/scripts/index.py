@@ -1,3 +1,4 @@
+import asyncio
 import json
 from src.scripts.connection import Database, Publication
 from src.scripts.extracting import MetadataExtractor
@@ -6,32 +7,34 @@ from src.scripts.downloading import PDFDownloader
 
 
 
-def print_shifts(count: int = 100, shifter: str = '-'):
-    print(shifter * count)
+def print_shifts(msg: str):
+    print(msg)
+    print()
 
 
-def main():
+async def test_extract_consumer(ch: asyncio.Queue):
+    print_shifts('test_extract_consumer starts...')
+    while True:
+        data = await ch.get()
 
+        if data == Config.END_VALUE_IN_CHANNELS:
+            return
+
+        print(data)
+
+
+async def main():
+  loaded_ch = asyncio.Queue()
+  extracted_ch = asyncio.Queue()
   MAX_PAPERS = 2 #todo: remake to Config.MAX_RESULTS
 
-  downloader = PDFDownloader()
+  downloader = PDFDownloader(loaded_ch)
   papers = downloader.download_from_arxiv(MAX_PAPERS)
 
-  print_shifts()
+  extractor = MetadataExtractor(loaded_ch, extracted_ch)
+  processed_papers = extractor.process_papers()
 
-  extractor = MetadataExtractor()
-  processed_papers = extractor.process_papers(papers)
-
-  print_shifts()
-
-  db = Database()
-
-  #todo: delete this to guys
-  db.clear_db_folder()
-  db.init_db()
-  
-  db.insert_publications([Publication(**item) for item in processed_papers])
-  print(json.dumps(db.get_publications(), indent=4))
+  await asyncio.gather(papers, processed_papers, test_extract_consumer(extracted_ch))
   
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

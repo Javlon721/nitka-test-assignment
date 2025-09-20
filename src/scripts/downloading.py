@@ -1,3 +1,4 @@
+import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, asdict
 import os
@@ -12,11 +13,13 @@ class LoadedPDFData(PublicationLocation):
 
 
 class PDFDownloader:
-    def __init__(self):
+
+    def __init__(self, loaded_ch: asyncio.Queue):
         self.pdfs_folder = Config.PDFS_FOLDER
-        self.downloaded_papers = []
         self.create_pdfs_file()
-    
+        self.loaded_ch = loaded_ch
+
+
     def clear_pdfs(self):
         shutil.rmtree(self.pdfs_folder)
         self.create_pdfs_file()
@@ -26,19 +29,21 @@ class PDFDownloader:
         os.makedirs(self.pdfs_folder, exist_ok=True)
 
 
-    def download_from_arxiv(self, max_results=100, max_workers=8) -> list[LoadedPDFData]:
-        """Download papers from ArXiv"""
+    async def download_from_arxiv(self, max_results=100, max_workers=8) -> list[LoadedPDFData]:
         print(f"Downloading {max_results} papers from ArXiv...")
+        print()
         papers = self._papers_to_download(max_results)
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(self._download_paper, paper) for paper in papers]
+        
+        semaphore = asyncio.Semaphore(max_workers)
+        async def run_download(paper):
+            async with semaphore:
+                return await asyncio.to_thread(self._download_paper, paper)
 
-            for future in as_completed(futures):
-                result = future.result()
-                if result:
-                    self.downloaded_papers.append(result)
-        print(f"Successfully downloaded {len(self.downloaded_papers)} papers")
-        return self.downloaded_papers
+        tasks = [run_download(paper) for paper in papers]
+        await asyncio.gather(*tasks, return_exceptions=True)
+        await self.loaded_ch.put(Config.END_VALUE_IN_CHANNELS)
+        print(f"Successfully downloaded {999} papers")
+        print()
 
 
     def _download_paper(self, paper: arxiv.Result) -> LoadedPDFData:
@@ -48,17 +53,22 @@ class PDFDownloader:
                 filename = f"{paper.entry_id.split('/')[-1]}_{safe_title}.pdf"
                 filepath = pathlib.Path(self.pdfs_folder, filename)
 
-                print(f"Downloading: {paper.title[:60]}...")
+                print_title = paper.title[:60]
+                print(f"Start downloading: {print_title}...")
+                print()
+
                 paper.download_pdf(self.pdfs_folder, filename)
 
-                return LoadedPDFData(
+                print(f"End downloading: {print_title}...")
+                print()
+
+                self.loaded_ch.put_nowait(LoadedPDFData(
                         title= paper.title,
                         pdf_link= paper.pdf_url,
                         local_pdf_path= str(filepath)
-                    )
+                    ))
             except Exception as e:
                 print(f"Error downloading {paper.title}: {e}")
-                return None
 
 
     def _papers_to_download(self, max_results=100):
@@ -77,15 +87,22 @@ class PDFDownloader:
                 print(f"Error searching category {category}: {e}")
 
 
+async def test_consumer(ch: asyncio.Queue):
+    while True:
+        data: LoadedPDFData = await ch.get()
 
-def main():
-    downloader = PDFDownloader()
+        if data == Config.END_VALUE_IN_CHANNELS:
+            return
+
+        print(data.title)
+
+
+async def main():
+    test_queue = asyncio.Queue()
+    downloader = PDFDownloader(test_queue)
     downloader.clear_pdfs()
-    arxiv_papers = downloader.download_from_arxiv(2)
-    import json
-    with open(Config.LOADED_PDFS_URL, 'w') as f:
-        json.dump(downloader.downloaded_papers, f, indent=2, default=asdict)
-    print(f"\nTotal papers collected: {len(downloader.downloaded_papers)}")
+    await asyncio.gather(downloader.download_from_arxiv(2), test_consumer(test_queue))
+
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

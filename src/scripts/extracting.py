@@ -1,6 +1,6 @@
+import asyncio
 import json
 import os
-import PyPDF2
 from src.scripts.connection import Publication
 from src.scripts.downloading import LoadedPDFData
 from src.config import Config
@@ -12,13 +12,15 @@ from google import genai
 
 class MetadataExtractor:
 
-    def __init__(self):
+    def __init__(self, loaded_ch: asyncio.Queue[LoadedPDFData], extracted_ch: asyncio.Queue):
         self.client = genai.Client(api_key=Config.GEMINI_API_KEY)
+        self.loaded_ch = loaded_ch
+        self.extracted_ch = extracted_ch
 
-
-    def extract_metadata_with_ai(self, paper_info: LoadedPDFData):
+    async def extract_metadata_with_ai(self, paper_info: LoadedPDFData):
         try:
-            my_file = self.client.files.upload(file=paper_info.local_pdf_path)
+
+            my_file = await self.client.aio.files.upload(file=paper_info.local_pdf_path)
             promt = f"""
                 Extract and analyze the following academic paper information and return a JSON object with the specified fields.
                 
@@ -43,9 +45,8 @@ class MetadataExtractor:
             
                 IMPORTANT: Return ONLY the JSON object, no additional text or formatting.
             """
-            print("Request send")
             
-            response = self.client.models.generate_content(
+            response = await self.client.aio.models.generate_content(
                 model='gemini-2.0-flash',
                 contents=[
                     promt,
@@ -57,54 +58,38 @@ class MetadataExtractor:
         },
             )
             
-            return response.parsed.model_dump()
+            self.extracted_ch.put_nowait({
+                        **response.parsed.model_dump(),
+                        'pdf_link': paper_info.pdf_link,
+                        'local_pdf_path': paper_info.local_pdf_path,
+                    })
         except Exception as e:
             print(e)
             return None
 
 
-    def process_papers(self, papers_data: list[LoadedPDFData]):
-        print(f"Extracting {len(papers_data)} papers...")
+    async def handle_paper(self, paper):
+        paper_title= paper.title[:50]
 
-        processed_papers = []
-        
-        for i, paper in enumerate(papers_data):
-            print(f"Processing paper {i+1}/{len(papers_data)}: {paper.title[:50]}...")
+        print(f"Start processing paper {paper_title}...")
+        print()
 
-            if os.path.exists(paper.local_pdf_path):
-                metadata = self.extract_metadata_with_ai(paper)
-                if not metadata:
-                    continue
-
-                processed_paper = {
-                    **metadata,
-                    'pdf_link': paper.pdf_link,
-                    'local_pdf_path': paper.local_pdf_path,
-                }
-                
-                processed_papers.append(processed_paper)
-                
-                time.sleep(1) # todo: delete on production
-        
-        return processed_papers
+        if os.path.exists(paper.local_pdf_path):
+            metadata = await self.extract_metadata_with_ai(paper)
+            if metadata:
+                print(f"End processing paper {paper_title}")
+                print()
 
 
-def main():
-    extractor = MetadataExtractor()
-    try:
-        with open(Config.LOADED_PDFS_URL, 'r') as f:
-            papers_data = [LoadedPDFData(**item) for item in json.load(f)]
-    except FileNotFoundError:
-        print(f"No {Config.LOADED_PDFS_URL} found")
-        return
+    async def process_papers(self):
+        print("Extracting papers...")
+        print()
 
-    processed_papers = extractor.process_papers(papers_data)
-    
-    with open(Config.TEST_GENERATED_DATA_URL, 'w') as f:
-        json.dump(processed_papers, f, indent=2)
+        async with asyncio.TaskGroup() as tg:
+            while True:
+                paper = await self.loaded_ch.get()
+                if paper == Config.END_VALUE_IN_CHANNELS:
+                    break
+                tg.create_task(self.handle_paper(paper))
 
-    print(f"Successfully processed {len(processed_papers)} papers")
-
-
-if __name__ == "__main__":
-    main()
+        await self.extracted_ch.put(Config.END_VALUE_IN_CHANNELS)

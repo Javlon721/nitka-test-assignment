@@ -24,6 +24,8 @@ class _Config:
     PUBLICATIONS_PER_PAGE: int = 20
     MAX_RESULTS: int = 100
 
+    END_VALUE_IN_CHANNELS: str = '!end!'
+
 
     @property
     def DATABASE_FILE_PATH(self) -> str:
