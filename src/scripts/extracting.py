@@ -88,6 +88,8 @@ class MetadataExtractor:
 
 
     def process_papers(self, papers_data: list[LoadedPDFData]):
+        print(f"Processing {len(papers_data)} papers...")
+
         processed_papers = []
         
         for i, paper in enumerate(papers_data):
@@ -120,7 +122,6 @@ def main():
         print(f"No {Config.LOADED_PDFS_URL} found")
         return
 
-    print(f"Processing {len(papers_data)} papers...")
     processed_papers = extractor.process_papers(papers_data)
     
     with open(Config.TEST_GENERATED_DATA_URL, 'w') as f:
