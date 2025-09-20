@@ -1,6 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, asdict
-import json
 import os
 import pathlib
 import arxiv
@@ -43,7 +42,7 @@ class PDFDownloader:
         return self.downloaded_papers
 
 
-    def _download_paper(self, paper) -> LoadedPDFData:
+    def _download_paper(self, paper: arxiv.Result) -> LoadedPDFData:
             try:
                 safe_title = "".join(c for c in paper.title if c.isalnum() or c in (' ', '-', '_')).rstrip()
                 safe_title = safe_title[:50]
@@ -51,7 +50,7 @@ class PDFDownloader:
                 filepath = pathlib.Path(self.pdfs_folder, filename)
 
                 print(f"Downloading: {paper.title[:60]}...")
-                paper.download_pdf(self.pdfs_folder)
+                paper.download_pdf(self.pdfs_folder, filename)
 
                 return LoadedPDFData(
                         title= paper.title,
