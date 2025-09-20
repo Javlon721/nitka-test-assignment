@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import json
 import os
 import pathlib
@@ -84,8 +84,9 @@ def main():
     downloader = PDFDownloader()
     downloader.clear_pdfs()
     arxiv_papers = downloader.download_from_arxiv(2)
-    for item in arxiv_papers:
-        print(item.title)
+    import json
+    with open(Config.LOADED_PDFS_URL, 'w') as f:
+        json.dump(downloader.downloaded_papers, f, indent=2, default=asdict)
     print(f"\nTotal papers collected: {len(downloader.downloaded_papers)}")
 
 if __name__ == "__main__":
