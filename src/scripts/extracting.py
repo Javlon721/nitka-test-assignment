@@ -90,6 +90,9 @@ class MetadataExtractor:
                 paper = await self.loaded_ch.get()
                 if paper == Config.END_VALUE_IN_CHANNELS:
                     break
-                tg.create_task(self.handle_paper(paper))
+                try:
+                    tg.create_task(self.handle_paper(paper))
+                except Exception as e:
+                    print(e)
 
         await self.extracted_ch.put(Config.END_VALUE_IN_CHANNELS)
