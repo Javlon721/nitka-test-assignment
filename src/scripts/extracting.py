@@ -4,7 +4,7 @@ import os
 from google import genai
 
 from src.scripts.utils import print_shifts
-from src.scripts.db.connection import Publication, PublicationInfo
+from src.scripts.db.models import Publication, PublicationInfo
 from src.scripts.downloading import LoadedPDFData
 from src.config import Config
 

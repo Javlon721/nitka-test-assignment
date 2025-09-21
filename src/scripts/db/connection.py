@@ -4,29 +4,9 @@ import os
 import shutil
 import sqlite3
 
-from pydantic import BaseModel, Field
-
+from src.scripts.db.models import PublicationInfo
 from src.scripts.utils import arr_to_str, custom_serialization, print_shifts
 from src.config import Config
-
-
-class PublicationLocation(BaseModel):
-    pdf_link: str = ""
-    local_pdf_path: str = ""
-
-
-class Publication(BaseModel):
-    title: str = ""
-    summary: str = ""
-    tags: list[str] = Field(default_factory=list)
-    year_published:str = ""
-    organization: str = ""
-    country: str = ""
-    language: str = ""
-
-class PublicationInfo(PublicationLocation, Publication):
-    pass
-
 
 
 def dict_factory(cursor, row):
