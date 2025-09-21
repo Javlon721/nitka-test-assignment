@@ -1,14 +1,13 @@
 import asyncio
 from contextlib import contextmanager
 import datetime
-import json
 import os
-import pathlib
 import shutil
 import sqlite3
 
 from pydantic import BaseModel, Field
 
+from src.scripts.utils import print_shifts
 from src.config import Config
 
 
@@ -133,8 +132,7 @@ class Database:
             cursor.execute(query, values)
             conn.commit()
 
-            print(f'Saved {data.title} to db')
-            print()
+            print_shifts(f'Saved {data.title} to db')
 
             return cursor.lastrowid
 

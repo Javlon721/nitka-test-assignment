@@ -1,20 +1,15 @@
 import asyncio
-import json
 from src.scripts.connection import Database, Publication
 from src.scripts.extracting import MetadataExtractor
 from src.config import Config
 from src.scripts.downloading import PDFDownloader
 
 
-def print_shifts(msg: str):
-    print(msg)
-    print()
-
-
 async def main():
   loaded_ch = asyncio.Queue()
   extracted_ch = asyncio.Queue()
-  MAX_PAPERS = Config.MAX_RESULTS
+  # MAX_PAPERS = Config.MAX_RESULTS
+  MAX_PAPERS = 2
 
   downloader = PDFDownloader(loaded_ch)
   papers = downloader.download_from_arxiv(MAX_PAPERS)

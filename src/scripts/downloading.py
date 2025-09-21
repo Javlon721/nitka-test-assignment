@@ -1,12 +1,13 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, asdict
 import os
 import pathlib
+import shutil
+
 import arxiv
+
+from src.scripts.utils import print_shifts
 from src.scripts.connection import PublicationLocation
 from src.config import Config
-import shutil
 
 class LoadedPDFData(PublicationLocation):
     title: str = ""
@@ -30,8 +31,8 @@ class PDFDownloader:
 
 
     async def download_from_arxiv(self, max_results=100, max_workers=8) -> list[LoadedPDFData]:
-        print(f"Downloading {max_results} papers from ArXiv...")
-        print()
+        print_shifts(f"Downloading {max_results} papers from ArXiv...")
+
         papers = self._papers_to_download(max_results)
         
         semaphore = asyncio.Semaphore(max_workers)
@@ -42,8 +43,8 @@ class PDFDownloader:
         tasks = [run_download(paper) for paper in papers]
         await asyncio.gather(*tasks, return_exceptions=True)
         await self.loaded_ch.put(Config.END_VALUE_IN_CHANNELS)
-        print(f"Successfully downloaded {999} papers")
-        print()
+
+        print_shifts(f"Successfully downloaded {999} papers")
 
 
     def _download_paper(self, paper: arxiv.Result) -> LoadedPDFData:
@@ -54,13 +55,11 @@ class PDFDownloader:
                 filepath = pathlib.Path(self.pdfs_folder, filename)
 
                 print_title = paper.title[:60]
-                print(f"Start downloading: {print_title}...")
-                print()
+                print_shifts(f"Start downloading: {print_title}...")
 
                 paper.download_pdf(self.pdfs_folder, filename)
 
-                print(f"End downloading: {print_title}...")
-                print()
+                print_shifts(f"End downloading: {print_title}...")
 
                 self.loaded_ch.put_nowait(LoadedPDFData(
                         title= paper.title,

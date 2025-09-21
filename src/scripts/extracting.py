@@ -1,9 +1,13 @@
 import asyncio
 import os
+
+from google import genai
+
+from src.scripts.utils import print_shifts
 from src.scripts.connection import Publication, PublicationInfo
 from src.scripts.downloading import LoadedPDFData
 from src.config import Config
-from google import genai
+
 
 
 class MetadataExtractor:
@@ -69,18 +73,15 @@ class MetadataExtractor:
     async def handle_paper(self, paper):
         paper_title= paper.title[:50]
 
-        print(f"Start processing paper {paper_title}...")
-        print()
+        print_shifts(f"Start processing paper {paper_title}...")
 
         if os.path.exists(paper.local_pdf_path):
             await self.extract_metadata_with_ai(paper)
-            print(f"End processing paper {paper_title}")
-            print()
+            print_shifts(f"End processing paper {paper_title}")
 
 
     async def process_papers(self):
-        print("Extracting papers...")
-        print()
+        print_shifts("Extracting papers...")
 
         async with asyncio.TaskGroup() as tg:
             while True:
