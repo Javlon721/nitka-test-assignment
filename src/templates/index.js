@@ -1,5 +1,7 @@
-const API_URL = 'http://127.0.0.1:8000/'; // Replace with your API endpoint
-const PAGE_SIZE = 5; // Adjust if your API uses a different size
+const API_URL = 'http://127.0.0.1:8000'; // Replace with your API endpoint
+const PAGE_SIZE = {
+  value: 5
+}; // Adjust if your API uses a different size
 let offset = 1;
 
 
@@ -7,13 +9,25 @@ const container = document.getElementById('dataContainer');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 
+
+async function fetchSettings() {
+  try {
+    const res = await fetch(`${API_URL}/settings`);
+    const data = await res.json();
+    PAGE_SIZE.value = data['page_size']
+  } catch (err) {
+    console.error('Fetch error:', err);
+  }
+}
+
+
 async function fetchData() {
   try {
     const res = await fetch(`${API_URL}?offset=${offset}`);
     const data = await res.json();
     renderCards(data);
     prevBtn.disabled = offset === 1;
-    nextBtn.disabled = data.length < PAGE_SIZE;
+    nextBtn.disabled = data.length < PAGE_SIZE.value;
   } catch (err) {
     console.error('Fetch error:', err);
     container.innerHTML = '<p>Error loading data.</p>';
@@ -71,4 +85,5 @@ nextBtn.addEventListener('click', () => {
 });
 
 // Initial load
+fetchSettings()
 fetchData();

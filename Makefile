@@ -1,7 +1,7 @@
 PROJECT_DIR := $(CURDIR)
 
 run:
-	@uvicorn src.api.app:app --reload --reload-dir src/api
+	@uvicorn src.api.app:app --reload
 
 extract:
 	@PYTHONPATH=. uv run "${PROJECT_DIR}/src/scripts/index.py"
