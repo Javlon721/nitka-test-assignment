@@ -6,7 +6,7 @@ import shutil
 import arxiv
 
 from src.scripts.utils import print_shifts
-from src.scripts.connection import PublicationLocation
+from src.scripts.db.connection import PublicationLocation
 from src.config import Config
 
 class LoadedPDFData(PublicationLocation):

@@ -1,5 +1,6 @@
 import asyncio
-from src.scripts.connection import Database, Publication
+
+from src.scripts.db.connection import Database, Publication
 from src.scripts.extracting import MetadataExtractor
 from src.config import Config
 from src.scripts.downloading import PDFDownloader
