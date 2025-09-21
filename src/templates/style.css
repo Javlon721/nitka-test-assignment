@@ -1,0 +1,56 @@
+body {
+	font-family: Arial, sans-serif;
+	margin: 20px;
+}
+
+.pagination {
+	margin-bottom: 20px;
+	display: flex;
+	justify-content: space-between;
+	max-width: 300px;
+}
+
+button {
+	padding: 8px 12px;
+	cursor: pointer;
+}
+
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.card {
+	display: grid;
+	grid-template-columns: 150px 1fr;
+	border: 1px solid #444; /* outer border */
+	border-collapse: collapse;
+	margin-bottom: 20px;
+}
+
+.card > div {
+	padding: 10px;
+	border-bottom: 1px solid #aaa; /* horizontal lines */
+	border-right: 1px solid #aaa; /* vertical line between columns */
+}
+
+/* Remove right border from the last column */
+.card > div:nth-child(2n) {
+	border-right: none;
+}
+
+/* Remove bottom border from the last row (both columns) */
+.card > div:last-child,
+.card > div:nth-last-child(2) {
+	border-bottom: none;
+}
+
+.field {
+	font-weight: bold;
+	color: #333;
+}
+
+.value {
+	color: #555;
+	word-break: break-word;
+}
