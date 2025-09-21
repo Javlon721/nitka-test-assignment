@@ -19,9 +19,35 @@ class MetadataExtractor:
 
     async def extract_metadata_with_ai(self, paper_info: LoadedPDFData):
         try:
-
             my_file = await self.client.aio.files.upload(file=paper_info.local_pdf_path)
-            promt = f"""
+
+            response = await self.client.aio.models.generate_content(
+                model=Config.GEMINI_MODEL,
+                contents=[
+                    self.promt,
+                    my_file
+                ],
+                config={
+                    'response_mime_type': 'application/json',
+                    'response_schema': Publication,
+                },
+            )
+
+            self.extracted_ch.put_nowait(
+                PublicationInfo(
+                        **response.parsed.model_dump(),
+                        pdf_link=paper_info.pdf_link,
+                        local_pdf_path=paper_info.local_pdf_path
+                    )
+                )
+        except Exception as e:
+            print(e)
+            return None
+
+
+    @property
+    def promt(self):
+        return  """
                 Extract and analyze the following academic paper information and return a JSON object with the specified fields.
                 
                 Return a JSON object with these exact fields:
@@ -45,29 +71,6 @@ class MetadataExtractor:
             
                 IMPORTANT: Return ONLY the JSON object, no additional text or formatting.
             """
-            
-            response = await self.client.aio.models.generate_content(
-                model=Config.GEMINI_MODEL,
-                contents=[
-                    promt,
-                    my_file
-                ],
-                config={
-                'response_mime_type': 'application/json',
-                'response_schema': Publication,
-        },
-            )
-            
-            self.extracted_ch.put_nowait(
-                PublicationInfo(
-                    **response.parsed.model_dump(),
-                    pdf_link=paper_info.pdf_link,
-                    local_pdf_path=paper_info.local_pdf_path
-                    )
-                )
-        except Exception as e:
-            print(e)
-            return None
 
 
     async def handle_paper(self, paper):
