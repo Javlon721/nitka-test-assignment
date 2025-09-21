@@ -17,13 +17,12 @@ app.add_middleware(
 )
 
 
-test_ch = asyncio.Queue()
-test_db = Database(test_ch)
+db = Database()
 
 
 @app.get('/')
 async def get_publications(offset: int, limit: int= Config.PUBLICATIONS_PER_PAGE):
-  return test_db.get_publications(offset, limit)
+  return db.get_publications(offset, limit)
 
 
 @app.get('/settings')

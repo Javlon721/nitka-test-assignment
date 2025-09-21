@@ -63,11 +63,11 @@ def custom_serialization(data: list[any]) -> list[str]:
 
 class Database:
 
-    def __init__(self, extracted_ch: asyncio.Queue[PublicationInfo]):
+    def __init__(self, extracted_ch: asyncio.Queue[PublicationInfo] | None=None):
         self.db_file_path = Config.DATABASE_FILE_PATH
         self.db_link =  Config.DATABASE_LINK
         self.table_name = "publications"
-        self.extracted_ch = extracted_ch
+        self.extracted_ch = extracted_ch or asyncio.Queue()
 
     @contextmanager
     def get_connection(self):
