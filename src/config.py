@@ -1,51 +1,49 @@
-from dataclasses import dataclass
-from pathlib import  Path
+from pathlib import Path
+from pydantic_settings import BaseSettings
 
-
-@dataclass
-class _Config:
+class _Config(BaseSettings):
 
     # AI
-    GEMINI_API_KEY: str = 'AIzaSyCCMm1VHhZR9gfNXyEpMgAKAHxjSYZu7xc'
-    TEST_GENERATED_DATA_PATH: str = 'tmp/db/generated.json'
-    GEMINI_MODEL: str = 'gemini-2.5-flash-lite'
+    GEMINI_API_KEY: str
+    TEST_GENERATED_DATA_PATH: str
+    GEMINI_MODEL: str
 
     BASEDIR: Path = Path.cwd()
 
     # Database
-    DATABASE_PATH: str = 'tmp/db'
-    DATABASE_NAME = 'library.db'
+    DATABASE_PATH: str
+    DATABASE_NAME: str
 
     # PDFS
-    PDFS_FOLDER_PATH: str = 'tmp/pdfs'
-    LOADED_PDFS_PATH: str = 'tmp/pdfs/data.json'
+    PDFS_FOLDER_PATH: str
+    LOADED_PDFS_PATH: str
 
     # PDF-source managment
-    ARXIV_BASE_URL: str = 'http://export.arxiv.org/api/query'
-    PUBLICATIONS_PER_PAGE: int = 20
-    MAX_RESULTS: int = 100
+    ARXIV_BASE_URL: str
+    PUBLICATIONS_PER_PAGE: int
+    MAX_RESULTS: int
 
-    END_VALUE_IN_CHANNELS: str = '!end!'
+    END_VALUE_IN_CHANNELS: str
 
 
     @property
     def DATABASE_FILE_PATH(self) -> str:
-      return self.BASEDIR.joinpath(self.DATABASE_PATH)
+      return self.create_relative_path(self.DATABASE_PATH)
 
 
     @property
     def DATABASE_LINK(self) -> str:
-      return self.BASEDIR.joinpath(self.DATABASE_PATH, self.DATABASE_NAME)
+      return self.create_relative_path(self.DATABASE_PATH, self.DATABASE_NAME)
 
 
     @property
     def PDFS_FOLDER(self) -> str:
-        return self.BASEDIR.joinpath(self.PDFS_FOLDER_PATH)
+        return self.create_relative_path(self.PDFS_FOLDER_PATH)
 
 
     @property
     def LOADED_PDFS_URL(self) -> str:
-        return self.BASEDIR.joinpath(self.LOADED_PDFS_PATH)
+        return self.create_relative_path(self.LOADED_PDFS_PATH)
 
 
     @property
@@ -53,11 +51,11 @@ class _Config:
           return self.create_relative_path(self.TEST_GENERATED_DATA_PATH)
 
 
-    def create_relative_path(self, *paths: str):
+    def create_relative_path(self, *paths: str) -> str:
       if not paths:
         raise ValueError("relative_path should take at least one path")
 
-      return self.BASEDIR.joinpath(*paths)
+      return str(self.BASEDIR.joinpath(*paths))
 
 
-Config = _Config()
+Config = _Config(_env_file=".env")

@@ -7,5 +7,5 @@ requires-python = ">=3.13"
 dependencies = [
     "arxiv>=2.2.0",
     "google-genai>=1.38.0",
-    "pypdf2>=3.0.1",
+    "pydantic-settings>=2.10.1",
 ]
