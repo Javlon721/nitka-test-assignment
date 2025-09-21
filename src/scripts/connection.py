@@ -7,7 +7,7 @@ import sqlite3
 
 from pydantic import BaseModel, Field
 
-from src.scripts.utils import print_shifts
+from src.scripts.utils import arr_to_str, custom_serialization, print_shifts
 from src.config import Config
 
 
@@ -29,37 +29,11 @@ class PublicationInfo(PublicationLocation, Publication):
     pass
 
 
-def arr_to_str(data: list[any], delimiter: str = ', ') -> str:
-    return delimiter.join([str(item) for item in data])
 
 def dict_factory(cursor, row):
     fields = [column[0] for column in cursor.description]
     return {key: value for key, value in zip(fields, row) if value}
 
-def custom_serialization(data: list[any]) -> list[str]:
-    '''
-        This fn can be definitly modified 
-        so for simplicity and time consuption to solve this i make it redundantly
-    '''
-    result = []
-    
-    for value in data:
-        new_value = None
-        match value:
-            case str():
-                new_value = value
-            case int():
-                new_value = str(value)
-            case list():
-                new_value = arr_to_str(value)
-            case datetime.datetime():
-                new_value = str(value)
-            case _:
-                raise ValueError(f"Type {type(value)} is not implemented")
-
-        result.append(new_value)
-
-    return result
 
 class Database:
 
