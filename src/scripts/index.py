@@ -9,8 +9,7 @@ from src.scripts.downloading import PDFDownloader
 async def main():
   loaded_ch = asyncio.Queue()
   extracted_ch = asyncio.Queue()
-  # MAX_PAPERS = Config.MAX_RESULTS
-  MAX_PAPERS = 2
+  MAX_PAPERS = Config.MAX_RESULTS
 
   downloader = PDFDownloader(loaded_ch)
   papers = downloader.download_from_arxiv(MAX_PAPERS)
