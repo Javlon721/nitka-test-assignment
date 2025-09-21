@@ -114,7 +114,7 @@ class Database:
 
 
     def is_db_exists(self):
-        return pathlib.Path.exists(self.db_file_path)
+        return os.path.exists(self.db_file_path)
 
 
     def insert_publication(
