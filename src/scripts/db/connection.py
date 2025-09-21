@@ -118,6 +118,13 @@ class Database:
             return publications
 
 
+    def get_publications_count(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT COUNT(*) FROM publications')
+            return cursor.fetchone()[0]
+
+
 
 
 if __name__ == "__main__":

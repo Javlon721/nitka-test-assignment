@@ -8,6 +8,8 @@ So if you on linux or windows, you should change some commands
 
 1. Specify **GEMINI_API_KEY** inside **.env** folder. You can also specify **GEMINI_MODEL**
 
+    Make sure that your **GEMINI_API_KEY** can handle 100 pdf files. 
+
 2. run `` make build `` to install all dependencies
 
 3. run `` make extract `` to download pdf-files and extract metadata from them using google gemini models.

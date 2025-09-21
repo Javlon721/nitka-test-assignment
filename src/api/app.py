@@ -22,6 +22,11 @@ async def get_publications(offset: int, limit: int= Config.PUBLICATIONS_PER_PAGE
   return db.get_publications(offset, limit)
 
 
+@app.get('/count')
+async def get_publications_count():
+  return db.get_publications_count()
+
+
 @app.get('/settings')
 async def get_settings():
   # i am lazy, so instead of using node_modules i am sending it via this silly endpoint :)
