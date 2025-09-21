@@ -8,7 +8,8 @@ So if you on linux or windows, you should change some commands
 
 1. Specify **GEMINI_API_KEY** inside **.env** folder. You can also specify **GEMINI_MODEL**
 
-    Make sure that your **GEMINI_API_KEY** can handle 100 pdf files. 
+    Make sure that your **GEMINI_API_KEY** can handle 100 pdf files. If not there is /count endpoint
+    to check how many pdfs extracted by GOOGLE GEMINI
 
 2. run `` make build `` to install all dependencies
 
