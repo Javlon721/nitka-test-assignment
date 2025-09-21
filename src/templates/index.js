@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:8000'; // Replace with your API endpoint
+const API_URL = 'http://localhost:8080'; // Replace with your API endpoint
 const PAGE_SIZE = {
   value: 5
 }; // Adjust if your API uses a different size
